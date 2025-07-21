@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Türkiye Şehirleri RAG Sistemi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --accent: #f59e42;
+            --bg: #f4f6fb;
+            --card-bg: #fff;
+            --border: #e5e7eb;
+            --shadow: 0 4px 24px rgba(0,0,0,0.08);
+            --radius: 18px;
+        }
+        html, body {
+            height: 100%;
+        }
+        body {
+            min-height: 100vh;
+            background: var(--bg);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #222;
+            margin: 0;
+        }
+        .main-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar {
+            background: var(--card-bg);
+            box-shadow: var(--shadow);
+            padding: 0 0 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+        .navbar .logo {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            letter-spacing: 1px;
+            margin-left: 32px;
+        }
+        .navbar .logo span {
+            font-size: 2rem;
+            margin-right: 10px;
+        }
+        .container {
+            flex: 1;
+            max-width: 900px;
+            margin: 40px auto 0 auto;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 28px 24px 24px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+        .header {
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+        }
+        .header p {
+            color: #555;
+            font-size: 1.1rem;
+            margin-bottom: 0;
+        }
+        .examples {
+            background: var(--bg);
+            border-radius: var(--radius);
+            padding: 18px 20px 10px 20px;
+            box-shadow: 0 2px 8px rgba(59,130,246,0.06);
+            margin-bottom: 0;
+        }
+        .examples h3 {
+            color: var(--primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .example-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .example-question {
+            background: #e0e7ff;
+            color: #1e293b;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 1px 4px rgba(59,130,246,0.07);
+        }
+        .example-question:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+        .question-form {
+            background: var(--bg);
+            border-radius: var(--radius);
+            padding: 24px 20px 18px 20px;
+            box-shadow: 0 2px 8px rgba(59,130,246,0.06);
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+            transition: border 0.2s;
+        }
+        textarea:focus {
+            border: 1.5px solid var(--primary);
+            outline: none;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            color: #fff;
+            padding: 13px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 6px;
+            box-shadow: 0 2px 8px rgba(59,130,246,0.08);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, var(--primary-dark), var(--primary));
+            box-shadow: 0 4px 16px rgba(59,130,246,0.13);
+        }
+        .loading {
+            text-align: center;
+            padding: 20px 0 0 0;
+            display: none;
+        }
+        .spinner {
+            width: 38px;
+            height: 38px;
+            border: 4px solid #e0e7ff;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .result {
+            margin-top: 18px;
+            padding: 24px 20px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 2px 8px rgba(59,130,246,0.07);
+        }
+        .result h3 {
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            font-size: 1.15em;
+        }
+        .answer {
+            line-height: 1.7;
+            color: #222;
+            margin-bottom: 18px;
+            font-size: 1.08em;
+        }
+        .sub-questions {
+            margin-top: 18px;
+            background: #f1f5f9;
+            padding: 16px 14px;
+            border-radius: 10px;
+        }
+        .sub-question {
+            margin-bottom: 13px;
+            padding: 10px 12px;
+            background: #fff;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent);
+            box-shadow: 0 1px 4px rgba(245,158,66,0.07);
+        }
+        .sub-question h4 {
+            color: var(--accent);
+            margin-bottom: 6px;
+            font-size: 1em;
+        }
+        .meta-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid #eee;
+            font-size: 0.98em;
+            color: #666;
+        }
+        .cities-used {
+            background: #e0f2fe;
+            padding: 8px 0 8px 0;
+            border-radius: 7px;
+            margin-top: 8px;
+        }
+        .city-tag {
+            display: inline-block;
+            background: var(--primary);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.98em;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        .error {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #ef4444;
+            margin-top: 10px;
+        }
+        @media (max-width: 700px) {
+            .container {
+                max-width: 99vw;
+                padding: 12px 2vw 12px 2vw;
+            }
+            .main-wrapper {
+                padding: 0;
+            }
+        }
+        @media (max-width: 500px) {
+            .container {
+                padding: 6px 1vw 6px 1vw;
+            }
+            .header h1 {
+                font-size: 1.3rem;
+            }
+        }
+        .footer {
+            text-align: center;
+            color: #888;
+            font-size: 0.98em;
+            margin: 32px 0 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-wrapper">
+        <div class="navbar">
+            <div class="logo"><span>🌐</span>TR City RAG</div>
+        </div>
+        <div class="container">
+            <div class="header">
+                <h1>Türkiye Şehirleri RAG Sistemi</h1>
+                <p>81 il hakkında Wikipedia tabanlı akıllı soru-cevap platformu</p>
+            </div>
+            <div class="examples">
+                <h3>💡 Örnek Sorular</h3>
+                <div class="example-list">
+                    <button class="example-question" onclick="setQuestion('İstanbul ve Ankara\'nın nüfusu ne kadar?')">İstanbul ve Ankara'nın nüfusu ne kadar?</button>
+                    <button class="example-question" onclick="setQuestion('Türkiye\'nin en büyük 5 şehrini nüfuslarıyla birlikte listele')">Türkiye'nin en büyük 5 şehrini nüfuslarıyla birlikte listele</button>
+                    <button class="example-question" onclick="setQuestion('Antalya ile İzmir\'in ekonomik durumunu karşılaştır')">Antalya ile İzmir'in ekonomik durumunu karşılaştır</button>
+                    <button class="example-question" onclick="setQuestion('Gaziantep\'in tarihi ve kültürel özellikleri nelerdir?')">Gaziantep'in tarihi ve kültürel özellikleri nelerdir?</button>
+                    <button class="example-question" onclick="setQuestion('Karadeniz Bölgesi illerinin ortak özellikleri nelerdir?')">Karadeniz Bölgesi illerinin ortak özellikleri nelerdir?</button>
+                    <button class="example-question" onclick="setQuestion('Ege Bölgesi şehirlerinin tarım ürünleri nelerdir?')">Ege Bölgesi şehirlerinin tarım ürünleri nelerdir?</button>
+                </div>
+            </div>
+            <div class="question-form">
+                <form id="questionForm">
+                    <div class="form-group">
+                        <label for="question">Şehirler hakkında merak ettiğiniz soruyu yazın:</label>
+                        <textarea id="question" name="question" rows="3" placeholder="Örn: İstanbul'un tarihi, İzmir'in ekonomisi, Karadeniz illeri..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">🔍 Yanıtla</button>
+                </form>
+            </div>
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Sorunuz işleniyor, lütfen bekleyin...</p>
+            </div>
+            <div id="result"></div>
+        </div>
+        <div class="footer">
+            &copy; 2024 Türkiye Şehirleri RAG | <a href="https://github.com/BilalEnesS" style="color:#3b82f6;text-decoration:none;">GitHub</a>
+        </div>
+    </div>
+    <script>
+        function setQuestion(question) {
+            document.getElementById('question').value = question;
+        }
+        document.getElementById('questionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const question = document.getElementById('question').value;
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            loading.style.display = 'block';
+            result.innerHTML = '';
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: question })
+                });
+                const data = await response.json();
+                if (data.error) {
+                    result.innerHTML = `<div class="error">❌ ${data.error}</div>`;
+                } else {
+                    let html = `
+                        <div class="result">
+                            <h3>📝 Cevap:</h3>
+                            <div class="answer">${data.answer}</div>
+                            <div class="cities-used">
+                                <strong>📍 Kullanılan Şehirler:</strong><br>
+                                ${data.source_cities.map(city => `<span class="city-tag">${city}</span>`).join('')}
+                            </div>
+                    `;
+                    if (data.sub_questions && data.sub_questions.length > 0) {
+                        html += `
+                            <div class="sub-questions">
+                                <h4>🔍 Alt Sorular ve Cevaplar:</h4>
+                        `;
+                        data.sub_questions.forEach((subq, index) => {
+                            html += `
+                                <div class="sub-question">
+                                    <h4>${index + 1}. ${subq.question}</h4>
+                                    <p>${subq.answer}</p>
+                                    <small>Kaynaklar: ${subq.sources.join(', ')}</small>
+                                </div>
+                            `;
+                        });
+                        html += `</div>`;
+                    }
+                    if (data.cost) {
+                        html += `
+                            <div class="meta-info">
+                                <span>🔢 Toplam Token: ${data.cost.total_tokens}</span>
+                                <span>💰 Maliyet: $${data.cost.total_cost.toFixed(4)}</span>
+                            </div>
+                        `;
+                    }
+                    html += `</div>`;
+                    result.innerHTML = html;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Bağlantı hatası: ${error.message}</div>`;
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html> 
